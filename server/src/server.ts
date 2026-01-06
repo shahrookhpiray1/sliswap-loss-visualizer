@@ -1,31 +1,34 @@
 // server/src/server.ts
-import express, { Request, Response, NextFunction } from 'express';
+import express from 'express';
 import { Endless, EndlessConfig, Network } from '@endlesslab/endless-ts-sdk';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 const PORT = parseInt(process.env.PORT || '10000', 10);
 
-app.use(express.json());
-
-// CORS middleware
+// CORS را کاملاً باز می‌کنیم (چون همه چیز در یک دامنه است)
 app.use((_, res, next) => {
-  res.header('Access-Control-Allow-Origin', 'https://shahrookhpiray1.github.io');
+  res.header('Access-Control-Allow-Origin', '*');
   res.header('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.header('Access-Control-Allow-Headers', 'Content-Type');
   next();
 });
 
+app.use(express.json());
+
 // Endless setup
 const config = new EndlessConfig({ network: Network.MAINNET });
 const endless = new Endless(config);
 
-// ✅ Correct pool addresses (from Endless Explorer)
 const POOL_ADDRESSES = {
   'EDS/USDT': '0x52fe2d47e68de101b84826dce2a09d9d37e2fd2256aa8cda13931ba07cf33082',
   'USDT/VDEP': '0x947079020ff7a80396813db930dc2731182d7d7601c253a5f44248446287aaac',
 };
 
-// ✅ Correct metadata (token object addresses)
 const METADATA = {
   USDT: '0x0707313fc6e87b5bad0bb90b65dbfe13522fde9e71261e91ab76e93fff707934',
   EDS: '0xc69712057e634bebc9ab02745d2d69ee738e3eb4f5d30189a9acbf8e08fb823e',
@@ -42,14 +45,12 @@ function fromAtomic(amount: bigint, decimals: number): number {
   return Number(amount) / (10 ** decimals);
 }
 
-// ✅ اصلاح شده: اسم ماژول باید با حروف بزرگ باشد
 async function getAmountOut(pool: string, tokenIn: string, amount: number): Promise<number> {
   const decimalsIn = DECIMALS[tokenIn as keyof typeof DECIMALS];
   const amountIn = toAtomic(amount, decimalsIn);
   try {
     const res = await endless.view({
       payload: {
-        // ✅ جدید: LiquidityPool
         function: '0x4198e1871cf459faceccb3d3e86882d7337d17badb0626a33538674385f6e5f4::LiquidityPool::get_amount_out',
         typeArguments: [],
         functionArguments: [pool, METADATA[tokenIn as keyof typeof METADATA], amountIn.toString()],
@@ -57,7 +58,7 @@ async function getAmountOut(pool: string, tokenIn: string, amount: number): Prom
     });
 
     if (!res || !res[0]) {
-      throw new Error('Empty response from Endless RPC');
+      throw new Error('Empty response');
     }
 
     const outToken =
@@ -67,12 +68,13 @@ async function getAmountOut(pool: string, tokenIn: string, amount: number): Prom
 
     return fromAtomic(BigInt(res[0] as string), DECIMALS[outToken as keyof typeof DECIMALS]);
   } catch (err) {
-    console.error('getAmountOut error:', { pool, tokenIn, amount, err });
+    console.error('getAmountOut error:', err);
     throw err;
   }
 }
 
-app.post('/api/calculate', async (req: Request, res: Response) => {
+// API endpoint
+app.post('/api/calculate', async (req, res) => {
   try {
     const { from, to, amount } = req.body as { from: string; to: string; amount: number };
     if (!from || !to || typeof amount !== 'number' || amount <= 0) {
@@ -104,6 +106,15 @@ app.post('/api/calculate', async (req: Request, res: Response) => {
   }
 });
 
+// سرو کردن فرانت‌اند
+const distDir = path.join(__dirname, '../../client/dist');
+app.use(express.static(distDir));
+
+// همه routeهای دیگر → index.html
+app.get('*', (req, res) => {
+  res.sendFile(path.join(distDir, 'index.html'));
+});
+
 app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Proxy server running on port ${PORT}`);
+  console.log(`Server running on port ${PORT}`);
 });

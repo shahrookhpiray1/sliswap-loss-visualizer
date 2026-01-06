@@ -45,7 +45,8 @@ const cardStyle = {
 
 // تابع جدید
 async function fetchLiveSwap(from: string, to: string, amount: number) {
-  const response = await fetch('https://sliswap-loss-visualizer.onrender.com/api/calculate', {
+  // بدون دامنه — فقط مسیر
+  const response = await fetch('/api/calculate', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ from, to, amount }),
