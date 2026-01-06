@@ -2,15 +2,11 @@
 import express from 'express';
 import { Endless, EndlessConfig, Network } from '@endlesslab/endless-ts-sdk';
 import path from 'path';
-import { fileURLToPath } from 'url';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 const app = express();
 const PORT = parseInt(process.env.PORT || '10000', 10);
 
-// CORS را کاملاً باز می‌کنیم (چون همه چیز در یک دامنه است)
+// CORS
 app.use((_, res, next) => {
   res.header('Access-Control-Allow-Origin', '*');
   res.header('Access-Control-Allow-Methods', 'POST, OPTIONS');
@@ -73,7 +69,6 @@ async function getAmountOut(pool: string, tokenIn: string, amount: number): Prom
   }
 }
 
-// API endpoint
 app.post('/api/calculate', async (req, res) => {
   try {
     const { from, to, amount } = req.body as { from: string; to: string; amount: number };
@@ -106,11 +101,9 @@ app.post('/api/calculate', async (req, res) => {
   }
 });
 
-// سرو کردن فرانت‌اند
 const distDir = path.join(__dirname, '../../client/dist');
 app.use(express.static(distDir));
 
-// همه routeهای دیگر → index.html
 app.get('*', (req, res) => {
   res.sendFile(path.join(distDir, 'index.html'));
 });
