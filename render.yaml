@@ -1,0 +1,15 @@
+# render.yaml
+services:
+  - type: web
+    name: sliswap-loss-visualizer
+    env: node
+    region: oregon
+    buildCommand: |
+      cd client && npm install && npm run build &&
+      cd ../server && npm install && npm run build
+    startCommand: |
+      cd server && npm start &
+      cd ../client && npx serve -s dist
+    envVars:
+      - key: PORT
+        value: 10000

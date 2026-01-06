@@ -1,0 +1,26 @@
+[
+  {
+    "id": "tx1",
+    "tokenPair": "SLI/USDC",
+    "type": "swap",
+    "expectedAmount": 100.0,
+    "actualAmount": 94.0,
+    "timestamp": "2026-01-04T10:30:00Z"
+  },
+  {
+    "id": "tx2",
+    "tokenPair": "ETH/SLI",
+    "type": "swap",
+    "expectedAmount": 50.0,
+    "actualAmount": 48.5,
+    "timestamp": "2026-01-04T11:15:00Z"
+  },
+  {
+    "id": "tx3",
+    "tokenPair": "WBTC/USDC",
+    "type": "swap",
+    "expectedAmount": 200.0,
+    "actualAmount": 195.0,
+    "timestamp": "2026-01-05T09:20:00Z"
+  }
+]
